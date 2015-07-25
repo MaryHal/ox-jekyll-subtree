@@ -62,14 +62,17 @@ Will be stripped from links addresses on the final HTML."
 Posts need very little to work, most information is guessed.
 Scheduled date is respected and heading is marked as DONE.
 
-Pages are marked by a \":type: page\" property, and they also
-need a :filename: property. Schedule is then ignored, and the
-file is saved inside `endless/blog-dir'.
+Pages are marked by a \":EXPORT_JEKYLL_LAYOUT: page\" property,
+and they also need a :filename: property. Schedule is then
+ignored, and the file is saved inside `endless/blog-dir'.
 
 The filename property is not mandatory for posts. If present, it
 will used exactly (no sanitising will be done). If not, filename
 will be a sanitised version of the title, see
-`endless/sanitise-file-name'."
+`endless/sanitise-file-name'.
+
+Once export is complete, the generated file will open in a new
+window unless DONT-SHOW is set to t"
   (interactive "P")
   (require 'ox-jekyll)
   (save-excursion
@@ -77,13 +80,13 @@ will be a sanitised version of the title, see
     ;; reach one.
     (while (null (org-entry-get (point) "TODO" nil t))
       (outline-up-heading 1 t))
-    (org-entry-put (point) "JEKYLL_LAYOUT"
-                   (org-entry-get (point) "JEKYLL_LAYOUT" t))
+    (org-entry-put (point) "EXPORT_JEKYLL_LAYOUT"
+                   (org-entry-get (point) "EXPORT_JEKYLL_LAYOUT" t))
 
     (let* ((date (org-get-scheduled-time (point) nil))
            (tags (nreverse (org-get-tags-at)))
            (meta-title (org-entry-get (point) "meta_title"))
-           (is-page (string= (org-entry-get (point) "JEKYLL_LAYOUT") "page"))
+           (is-page (string= (org-entry-get (point) "EXPORT_JEKYLL_LAYOUT") "default"))
            (name (org-entry-get (point) "filename"))
            (title (org-get-heading t t))
            (series (org-entry-get (point) "series" t))
@@ -96,6 +99,7 @@ will be a sanitised version of the title, see
       (unless date
         (org-schedule nil ".")
         (setq date (current-time)))
+
       ;; For pages, demand filename.
       (if is-page
           (if (null name)
@@ -112,7 +116,7 @@ will be a sanitised version of the title, see
       (let ((subtree-content
              (save-restriction
                (org-narrow-to-subtree)
-               (ignore-errors (ispell-buffer))
+               ;; (ignore-errors (ispell-buffer))
                (buffer-string)))
             (header-content
              (endless/get-org-headers))
@@ -133,16 +137,18 @@ will be a sanitised version of the title, see
             (when meta-title
               (insert "meta_title: \"" (format meta-title title) "\"\n"))
             (search-backward-regexp "\ndate *:\\(.*\\)$")
+
             (if is-page
                 ;; Pages don't need a date field.
                 (replace-match "" :fixedcase :literal nil 0)
               (replace-match (concat " " date) :fixedcase :literal nil 1))
 
-            ;; Save the final file.
+            ;; Save the final file. If (file)name has a type suffix, don't append .html.
             (endless/clean-output-links)
             (let ((out-file
-                   (expand-file-name (concat (if is-page "" "_posts/") name ".html")
-                                     endless/blog-dir)))
+                   (expand-file-name (concat (if is-page "" "_posts/") name
+                                             (if (string-match "\\.[[:ascii:]]+$" name) "" ".html"))
+                                             endless/blog-dir)))
               (write-file out-file)
               (unless dont-show
                 (find-file-other-window out-file)))
@@ -162,7 +168,7 @@ will be a sanitised version of the title, see
   (macroexpand `(rx (or ,endless/blog-base-url ,endless/blog-dir))))
 
 (defun endless/clean-output-links ()
-  "Strip `endless/blog-base-url' and \"file://\" from the start of URLs. "
+  "Strip `endless/blog-base-url' and \"file://\" from the start of URLs."
   ;; Fix org's stupid filename handling.
   (goto-char (point-min))
   (while (search-forward-regexp "\\(href\\|src\\)=\"\\(file://\\)/" nil t)
@@ -214,13 +220,15 @@ will be a sanitised version of the title, see
            (format "/%s.html" (endless/strip-date-from-filename target-filename))
            :fixedcase :literal nil 1))))))
   (goto-char (point-min))
-  (search-forward "\n*" nil 'noerror))
+  (outline-next-heading))
 
 (defun endless/strip-date-from-filename (name)
+  "Remove date (YYYY-MM-DD) from NAME."
   (replace-regexp-in-string "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-" "" name))
 
 (defun endless/convert-tag (tag)
-  "Overcome org-mode's tag limitations."
+  ;; "Overcome org-mode's tag limitations."
+  "Convert TAG to a more usable form."
   (replace-regexp-in-string
    "_" "-"
    (replace-regexp-in-string "__" "." tag)))
@@ -240,5 +248,5 @@ And transforms anything that's not alphanumeric into dashes."
       (replace-regexp-in-string
        "(.*)" "" name))))))
 
-(provide 'ox-jekyll-subtrees)
+(provide 'ox-jekyll-subtree)
 ;;; ox-jekyll-subtree.el ends here
