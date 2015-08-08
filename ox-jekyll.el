@@ -1,5 +1,4 @@
 ;;; ox-jekyll.el --- Export Jekyll articles using org-mode.
-
 ;; Copyright (C) 2013  Yoshinari Nomura
 
 ;; Author: Yoshinari Nomura <nom@quickhack.net>
