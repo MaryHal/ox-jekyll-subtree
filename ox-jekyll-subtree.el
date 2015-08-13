@@ -44,6 +44,8 @@
 
 ;;; Code:
 
+(require 'org)
+(require 'ox-jekyll)
 (require 'subr-x)
 
 (defcustom endless/blog-dir (expand-file-name "~/Git-Projects/blog/")
@@ -74,7 +76,6 @@ will be a sanitised version of the title, see
 Once export is complete, the generated file will open in a new
 window unless DONT-SHOW is set to t"
   (interactive "P")
-  (require 'ox-jekyll)
   (save-excursion
     ;; Actual posts NEED a TODO state. So we go up the tree until we
     ;; reach one.
