@@ -1,4 +1,4 @@
-;;; ox-jekyll-subtree.el --- Extension to ox-jexkyll for better export of subtrees   -*- lexical-binding: t; -*-
+;;; ox-jekyll-subtree.el --- Extension to ox-jekyll for better export of subtrees   -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Artur Malabarba
 
@@ -60,7 +60,7 @@ Will be stripped from links addresses on the final HTML."
 (defun endless/export-to-blog (dont-show)
   "Exports current subtree as jekyll html and copies to blog.
 Posts need very little to work, most information is guessed.
-Scheduled date is respected and heading is marked as DONE.
+Scheduled date is respected.
 
 Pages are marked by a \":EXPORT_JEKYLL_LAYOUT: page\" property,
 and they also need a :filename: property. Schedule is then
@@ -111,7 +111,8 @@ window unless DONT-SHOW is set to t"
         (unless name
           (setq name (concat date "-" (endless/sanitise-file-name title)))
           (org-entry-put (point) "filename" name))
-        (org-todo 'done))
+        ;; (org-todo 'done)
+        )
 
       (let ((subtree-content
              (save-restriction
