@@ -107,10 +107,9 @@ window unless DONT-SHOW is set to t"
               (error "Pages need a :filename: property"))
         ;; For posts, guess some information that wasn't provided as
         ;; properties.
-        (setq date (format-time-string "%Y-%m-%d" date))
         ;; Define a name, if there isn't one.
         (unless name
-          (setq name (concat date "-" (endless/sanitise-file-name title)))
+          (setq name (concat (format-time-string "%Y-%m-%d" date) "-" (endless/sanitise-file-name title)))
           (org-entry-put (point) "filename" name))
         ;; (org-todo 'done)
         )
@@ -143,7 +142,7 @@ window unless DONT-SHOW is set to t"
             (if is-page
                 ;; Pages don't need a date field.
                 (replace-match "" :fixedcase :literal nil 0)
-              (replace-match (concat " " date) :fixedcase :literal nil 1))
+              (replace-match (concat " " (format-time-string "%Y-%m-%d %T" date)) :fixedcase :literal nil 1))
 
             ;; Save the final file. If (file)name has a type suffix, don't append .html.
             (endless/clean-output-links)
